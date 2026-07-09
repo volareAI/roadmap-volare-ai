@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronUp, LogOut } from "lucide-react";
+import { ACTION_PLAN_MONTHS, buildActionPlan } from "@/lib/action-plan";
 import type { RoadmapDraftJson, RoadmapMetaResponse } from "@/lib/roadmap-types";
 
 const ROADMAP_PAGE_CSS = `
@@ -557,6 +558,94 @@ const ROADMAP_PAGE_CSS = `
   .mi-author { font-size: 13px; font-weight: 700; color: var(--on-dark-secondary); margin-top: 14px; font-style: normal; }
   .mi-cta { text-align: center; flex-shrink: 0; }
   .mi-cta p { font-size: 13px; color: var(--on-dark-secondary); margin-bottom: 14px; max-width: 200px; line-height: 1.5; }
+  .action-plan-section {
+    background: var(--dark);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 72px 40px;
+  }
+  .action-plan-inner { max-width: 1100px; margin: 0 auto; }
+  .action-plan-header { max-width: 680px; margin-bottom: 30px; }
+  .action-plan-eyebrow {
+    display: block;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .action-plan-title {
+    color: var(--on-dark-primary);
+    font-size: clamp(1.85rem, 3.5vw, 2.75rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin: 0 0 10px;
+  }
+  .action-plan-subtitle { color: var(--on-dark-secondary); font-size: 1rem; margin: 0; }
+  .action-plan-months {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    align-items: start;
+  }
+  .action-plan-month {
+    min-width: 0;
+    background: var(--dark-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.16);
+  }
+  .action-plan-month-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .action-plan-month-label { color: var(--on-dark-primary); font-size: 16px; font-weight: 800; }
+  .action-plan-count {
+    color: var(--on-dark-tertiary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .action-plan-list { display: grid; gap: 12px; margin-top: 14px; }
+  .action-plan-card {
+    min-width: 0;
+    padding: 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.075);
+  }
+  .action-plan-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; min-width: 0; }
+  .action-plan-category {
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .action-plan-headline {
+    color: var(--on-dark-primary);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .action-plan-detail {
+    color: var(--on-dark-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 6px 0 0;
+    overflow-wrap: anywhere;
+  }
   .stories-section { padding: 72px 0; background: var(--dark); }
   .stories-section.stories-light {
     background: var(--light-bg);
@@ -744,10 +833,11 @@ const ROADMAP_PAGE_CSS = `
     .text-grid > .t-card:last-child:nth-child(odd) { max-width: none; }
     .video-grid { grid-template-columns: repeat(2,1fr); gap: 22px; padding: 0 24px; }
     .video-grid > .v-card { grid-column: auto; }
-    .hero, .health-wrap, .val-wrap, .rm-banner, .next-section, .stories-cta { padding-left: 24px; padding-right: 24px; }
+    .hero, .health-wrap, .val-wrap, .rm-banner, .action-plan-section, .next-section, .stories-cta { padding-left: 24px; padding-right: 24px; }
     .proof-strip, .site-nav, .site-footer { padding-left: 24px; padding-right: 24px; }
     .stories-container-wide { padding: 0 24px; }
     .rm-inner { flex-direction: column; align-items: flex-start; }
+    .action-plan-months { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
     .hero-metrics { grid-template-columns: repeat(2,1fr); }
@@ -1190,6 +1280,11 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const heroMetaLine = buildHeroMetaLine(snapshot);
   const heroSourceLabel = normalizeReportSourceLabel(snapshot.reportMeta.sourceLabel);
+  const actionPlan = buildActionPlan(snapshot);
+  const actionPlanMonths = ACTION_PLAN_MONTHS.map((month) => ({
+    month,
+    actions: actionPlan.filter((action) => action.month === month),
+  })).filter((group) => group.actions.length > 0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1449,6 +1544,42 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
           </div>
         </div>
         </RevealBlock>
+
+        {actionPlanMonths.length > 0 ? (
+          <RevealBlock delay={0.08}>
+            <section className="action-plan-section" aria-labelledby="action-plan-title">
+              <div className="action-plan-inner">
+                <div className="action-plan-header">
+                  <span className="action-plan-eyebrow">90-Day Summary</span>
+                  <h2 id="action-plan-title" className="action-plan-title">Action Plan</h2>
+                  <p className="action-plan-subtitle">A month-by-month summary of the advisor-approved roadmap actions.</p>
+                </div>
+                <div className="action-plan-months">
+                  {actionPlanMonths.map(({ month, actions }) => (
+                    <section key={month} className="action-plan-month" aria-labelledby={`action-plan-${month.toLowerCase()}`}>
+                      <div className="action-plan-month-head">
+                        <span id={`action-plan-${month.toLowerCase()}`} className="action-plan-month-label">Month {month.slice(1)}</span>
+                        <span className="action-plan-count">{actions.length} {actions.length === 1 ? "action" : "actions"}</span>
+                      </div>
+                      <div className="action-plan-list">
+                        {actions.map((action, index) => (
+                          <article key={`${month}-${action.categoryKey}-${index}`} className="action-plan-card">
+                            <div className="action-plan-meta">
+                              <MonthChip month={action.month} />
+                              <span className="action-plan-category">{action.categoryLabel}</span>
+                            </div>
+                            <div className="action-plan-headline">{action.headline || "Advisor-approved action"}</div>
+                            {action.detail ? <p className="action-plan-detail">{action.detail}</p> : null}
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </RevealBlock>
+        ) : null}
 
         <RevealBlock delay={0.08}>
         <section className="stories-section" style={{ padding: "56px 0 40px", background: "var(--dark-surface)", textAlign: "center", borderTop: "1px solid var(--border)" }}>
