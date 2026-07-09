@@ -951,6 +951,41 @@ function formatPointsLabel(pointsEarned: number | null | undefined, pointsTotal:
   return `${pointsEarned} out of ${pointsTotal} points`;
 }
 
+function normalizeReportSourceLabel(value: string | null | undefined) {
+  const normalized = String(value || "").trim();
+  if (!normalized || /^volare(\s+advisory)?$/i.test(normalized)) {
+    return "Business Health and Value Report";
+  }
+  return normalized;
+}
+
+function normalizeTeamSizeLabel(value: string | null | undefined) {
+  const normalized = String(value || "").trim();
+  if (!normalized) {
+    return "";
+  }
+  if (/employee/i.test(normalized)) {
+    return normalized;
+  }
+  const numeric = Number(normalized.replace(/,/g, ""));
+  if (Number.isFinite(numeric)) {
+    const rounded = Math.round(numeric);
+    return `${rounded} ${rounded === 1 ? "Employee" : "Employees"}`;
+  }
+  return `${normalized} Employees`;
+}
+
+function buildHeroMetaLine(snapshot: RoadmapDraftJson) {
+  return [
+    String(snapshot.company.industry || "").trim(),
+    String(snapshot.company.owners || "").trim(),
+    normalizeTeamSizeLabel(snapshot.company.teamSizeLabel),
+    String(snapshot.company.reportDateLabel || "").trim(),
+  ]
+    .filter(Boolean)
+    .join(" | ");
+}
+
 function categoryBadgeLabel(category: RoadmapDraftJson["categories"][number]) {
   if (category.focusMode === "deferred") {
     return (category.scorePct ?? 0) >= 80 ? "Well Built" : "Not a Month 1 Priority";
@@ -1153,6 +1188,8 @@ export function RoadmapPasswordGate({ slug, meta, errorMessage }: RoadmapPasswor
 export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
   const shouldReduceMotion = useReducedMotion();
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const heroMetaLine = buildHeroMetaLine(snapshot);
+  const heroSourceLabel = normalizeReportSourceLabel(snapshot.reportMeta.sourceLabel);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1208,15 +1245,13 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
 
         <RevealBlock>
         <section className="hero">
-          <span className="eyebrow">{snapshot.reportMeta.sourceLabel || "Business Health and Value Report"}</span>
+          <span className="eyebrow">{heroSourceLabel}</span>
           <h1>
             {snapshot.company.companyName}.
             <br />
             <em>Your 90-Day Roadmap.</em>
           </h1>
-          <p className="hero-sub">
-            {snapshot.company.industry} | {snapshot.company.owners} | {snapshot.company.teamSizeLabel} | {snapshot.company.reportDateLabel}
-          </p>
+          <p className="hero-sub">{heroMetaLine}</p>
           <div className="hero-metrics">
             <div className="hm">
               <div className="hm-label">Revenue</div>
