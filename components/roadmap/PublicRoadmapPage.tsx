@@ -914,7 +914,7 @@ const VIDEO_STORIES = [
     name: "Carey James",
     company: "Brand Alchemy",
     quote: "We scaled nearly 6x in recurring revenue within six months. That growth was completely intentional.",
-    src: "https://player.vimeo.com/video/1189187059?badge=0&autopause=0&player_id=0&app_id=58479",
+    src: "https://player.vimeo.com/video/1215566827?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479",
     title: "Carey James, Brand Alchemy",
   },
   {
