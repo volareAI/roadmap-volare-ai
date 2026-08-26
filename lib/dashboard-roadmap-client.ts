@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "crypto";
+import { unstable_cache } from "next/cache";
 import type {
   RoadmapDraftPreviewResponse,
   RoadmapMetaResponse,
@@ -69,8 +70,37 @@ async function requestDashboardRoadmap<T>(pathname: string, init?: RequestInit &
   return payload as T;
 }
 
+/**
+ * How long a roadmap's CRM payload is reused before being refetched.
+ *
+ * The published roadmap for a given slug changes rarely (an advisor
+ * republishes it), but every page view previously made TWO uncached,
+ * signed, server-side calls to the dashboard API before a single byte was
+ * rendered, so a reload always paid the full round trip.
+ *
+ * `unstable_cache` rather than `fetch`-level caching on purpose: this route is
+ * `dynamic = "force-dynamic"` (it reads the access cookie), and per Next's own
+ * docs that is *equivalent to setting every `fetch()` to*
+ * `{ cache: "no-store", next: { revalidate: 0 } }` plus
+ * `fetchCache = "force-no-store"` — so fetch options here would be ignored.
+ * `unstable_cache` memoizes the function's RESULT, which is unaffected by that.
+ *
+ * Tagged per slug so a publish can invalidate a single roadmap immediately via
+ * `revalidateTag(roadmapCacheTag(slug))`; the 60s window is the backstop that
+ * keeps data fresh even with no explicit invalidation.
+ */
+const ROADMAP_CACHE_SECONDS = 60;
+
+export function roadmapCacheTag(slug: string) {
+  return `roadmap:${slug}`;
+}
+
 export async function fetchDashboardRoadmapMeta(slug: string) {
-  return requestDashboardRoadmap<RoadmapMetaResponse>(`/api/internal/roadmaps/${slug}/meta`);
+  return unstable_cache(
+    () => requestDashboardRoadmap<RoadmapMetaResponse>(`/api/internal/roadmaps/${slug}/meta`),
+    ["roadmap-meta", slug],
+    { tags: [roadmapCacheTag(slug)], revalidate: ROADMAP_CACHE_SECONDS },
+  )();
 }
 
 export async function authenticateDashboardRoadmap(slug: string, password: string) {
@@ -84,7 +114,11 @@ export async function authenticateDashboardRoadmap(slug: string, password: strin
 }
 
 export async function fetchDashboardRoadmapSnapshot(slug: string) {
-  return requestDashboardRoadmap<RoadmapSnapshotResponse>(`/api/internal/roadmaps/${slug}/snapshot`);
+  return unstable_cache(
+    () => requestDashboardRoadmap<RoadmapSnapshotResponse>(`/api/internal/roadmaps/${slug}/snapshot`),
+    ["roadmap-snapshot", slug],
+    { tags: [roadmapCacheTag(slug)], revalidate: ROADMAP_CACHE_SECONDS },
+  )();
 }
 
 export async function fetchDashboardRoadmapDraftPreview(slug: string, roadmapId: string) {

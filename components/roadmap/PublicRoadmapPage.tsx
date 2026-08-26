@@ -2,7 +2,6 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronUp, LogOut } from "lucide-react";
 import { ACTION_PLAN_MONTHS, buildActionPlan } from "@/lib/action-plan";
 import type { RoadmapDraftJson, RoadmapMetaResponse } from "@/lib/roadmap-types";
@@ -1124,28 +1123,27 @@ function MonthChip({ month }: { month: "M1" | "M2" | "M3" }) {
   return <div className={`act-chip ${month.toLowerCase()}`}>{month}</div>;
 }
 
+/**
+ * Was a `framer-motion` scroll-reveal (`initial={{opacity:0}}` + `whileInView`).
+ * Removed because that pattern renders `opacity:0` into the SERVER HTML, so any
+ * client where the animation never ran left the content permanently invisible:
+ * a client reported the page as blank/black with only the header and footer
+ * showing, and it reproduced in a real browser with 8 blocks stuck at
+ * `opacity: 0` (one of them 2801px tall).
+ *
+ * Kept as a plain wrapper (same element, same `className`) rather than deleted
+ * so the surrounding layout and CSS are byte-for-byte unchanged; only the
+ * animation is gone. `delay` is accepted and ignored so call sites stay as-is.
+ */
 function RevealBlock({
   children,
   className,
-  delay = 0,
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
 }) {
-  const shouldReduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      className={className}
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
-      whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.18 }}
-      transition={{ duration: 0.45, ease: "easeOut", delay }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className={className}>{children}</div>;
 }
 
 function CategoryCard({
@@ -1229,18 +1227,8 @@ export function RoadmapPasswordGate({ slug, meta, errorMessage }: RoadmapPasswor
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: ROADMAP_PAGE_CSS }} />
-      <motion.main
-        className="pw-shell"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-      >
-        <motion.section
-          className="pw-card"
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
+      <main className="pw-shell">
+        <section className="pw-card">
           <Image
             src="/volare-logo.png"
             alt="Volare"
@@ -1269,14 +1257,13 @@ export function RoadmapPasswordGate({ slug, meta, errorMessage }: RoadmapPasswor
               View Roadmap
             </button>
           </form>
-        </motion.section>
-      </motion.main>
+        </section>
+      </main>
     </>
   );
 }
 
 export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
-  const shouldReduceMotion = useReducedMotion();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const heroMetaLine = buildHeroMetaLine(snapshot);
   const heroSourceLabel = normalizeReportSourceLabel(snapshot.reportMeta.sourceLabel);
@@ -1300,22 +1287,18 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
   }, []);
 
   const handleScrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: shouldReduceMotion ? "auto" : "smooth",
-    });
+    // Native media query rather than framer-motion's `useReducedMotion`, so
+    // this page no longer depends on that library at all.
+    const prefersReducedMotion =
+      typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: ROADMAP_PAGE_CSS }} />
-      <motion.main
-        className="roadmap-page"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
-        <motion.nav className="site-nav" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: "easeOut" }}>
+      <main className="roadmap-page">
+        <nav className="site-nav">
           <Image
             src="/volare-logo.png"
             alt="Volare"
@@ -1336,7 +1319,7 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
               </button>
             </form>
           </div>
-        </motion.nav>
+        </nav>
 
         <RevealBlock>
         <section className="hero">
@@ -1661,7 +1644,7 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
         </section>
         </RevealBlock>
 
-        <motion.footer className="site-footer" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.35, ease: "easeOut" }}>
+        <footer className="site-footer">
           <Image
             src="/volare-logo.png"
             alt="Volare"
@@ -1672,18 +1655,10 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
           <div className="footer-note">
             Prepared for {snapshot.company.companyName} | {snapshot.company.reportDateLabel} | Confidential | Volare works with founder-led companies between $1M and $15M in revenue.
           </div>
-        </motion.footer>
+        </footer>
 
-        <AnimatePresence>
-          {showScrollTop ? (
-            <motion.div
-              key="scroll-top"
-              className="scroll-top-wrap"
-              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.94 }}
-              animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.96 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
-            >
+        {showScrollTop ? (
+          <div className="scroll-top-wrap">
               <button className="scroll-top-btn" type="button" onClick={handleScrollToTop} aria-label="Scroll to top">
                 <span className="scroll-top-icon" aria-hidden="true">
                   <ChevronUp />
@@ -1693,10 +1668,9 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
                   <span className="scroll-top-value">Top</span>
                 </span>
               </button>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </motion.main>
+          </div>
+        ) : null}
+      </main>
     </>
   );
 }
