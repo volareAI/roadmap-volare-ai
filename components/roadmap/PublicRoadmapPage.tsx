@@ -685,6 +685,20 @@ const ROADMAP_PAGE_CSS = `
     padding: 0 40px;
   }
   .video-grid > .v-card { grid-column: span 2; }
+  /*
+    Seven cards laid out 3 / 2 / 2, with the two short rows centred rather than
+    left-justified (Carrie's call, 2026-10-10). Plain 3-per-row leaves the
+    seventh alone against the left edge, which reads as a mistake.
+
+    The :nth-child(4):nth-last-child(4) pair matches only when the list is exactly
+    seven long, so a six- or nine-card list keeps the untouched 3-per-row grid
+    and nothing here has to be remembered later. The tablet and mobile grids
+    reset these below, where columns 2-5 do not exist.
+  */
+  .video-grid > .v-card:nth-child(4):nth-last-child(4) { grid-column: 2 / span 2; }
+  .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(5) { grid-column: 4 / span 2; }
+  .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(6) { grid-column: 2 / span 2; }
+  .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(7) { grid-column: 4 / span 2; }
   .v-card { display: flex; flex-direction: column; gap: 12px; }
   .v-embed {
     position: relative;
@@ -831,7 +845,18 @@ const ROADMAP_PAGE_CSS = `
     .text-grid { grid-template-columns: 1fr; }
     .text-grid > .t-card:last-child:nth-child(odd) { max-width: none; }
     .video-grid { grid-template-columns: repeat(2,1fr); gap: 22px; padding: 0 24px; }
-    .video-grid > .v-card { grid-column: auto; }
+    /*
+      Reset the 3/2/2 placement when the grid narrows. These repeat the full
+      desktop selectors on purpose: a media query adds no specificity, so a
+      shorter selector here LOSES to the longer one above and the centring
+      survives into the stacked layout, squashing the cards. Measured, not
+      assumed — the first attempt did exactly that on a 390px viewport.
+    */
+    .video-grid > .v-card,
+    .video-grid > .v-card:nth-child(4):nth-last-child(4),
+    .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(5),
+    .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(6),
+    .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(7) { grid-column: auto; }
     .hero, .health-wrap, .val-wrap, .rm-banner, .action-plan-section, .next-section, .stories-cta { padding-left: 24px; padding-right: 24px; }
     .proof-strip, .site-nav, .site-footer { padding-left: 24px; padding-right: 24px; }
     .stories-container-wide { padding: 0 24px; }
@@ -842,6 +867,18 @@ const ROADMAP_PAGE_CSS = `
     .hero-metrics { grid-template-columns: repeat(2,1fr); }
     .val-inner { grid-template-columns: 1fr; }
     .video-grid { grid-template-columns: 1fr; }
+    /*
+      Reset the 3/2/2 placement when the grid narrows. These repeat the full
+      desktop selectors on purpose: a media query adds no specificity, so a
+      shorter selector here LOSES to the longer one above and the centring
+      survives into the stacked layout, squashing the cards. Measured, not
+      assumed — the first attempt did exactly that on a 390px viewport.
+    */
+    .video-grid > .v-card,
+    .video-grid > .v-card:nth-child(4):nth-last-child(4),
+    .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(5),
+    .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(6),
+    .video-grid > .v-card:nth-child(4):nth-last-child(4) ~ .v-card:nth-child(7) { grid-column: auto; }
     .cc-head, .site-nav { flex-direction: column; align-items: flex-start; }
     .nav-session { width: 100%; justify-content: space-between; }
     .nav-meta { text-align: left; }
@@ -926,8 +963,7 @@ const VIDEO_STORIES = [
   {
     name: "Steve Sullivan",
     company: "Power Communications",
-    quote:
-      "Within just a few months of working with Volare, we already increased our revenue 30% over last year. Having Volare as a partner, as another part of your team, gives you real confidence in where the business is headed.",
+    quote: "Within just a few months of working with Volare, we already increased our revenue 30% over last year.",
     src: "https://player.vimeo.com/video/1218011070?badge=0&autopause=0&player_id=0&app_id=58479",
     title: "Steve Sullivan, Power Communications",
   },
