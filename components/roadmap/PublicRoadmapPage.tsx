@@ -713,13 +713,6 @@ const ROADMAP_PAGE_CSS = `
   .v-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .v-name { font-size: 1.1rem; font-weight: 800; color: var(--light-text); letter-spacing: -0.01em; line-height: 1.2; }
   .v-company { font-size: 0.9rem; color: var(--light-sub); line-height: 1.3; margin-top: -3px; }
-  .v-metrics {
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    color: #1f7a4d;
-    margin-top: 2px;
-  }
   .v-quote { font-size: 0.95rem; font-style: italic; color: #2d3748; line-height: 1.55; margin-top: 6px; }
   .text-grid {
     display: grid;
@@ -970,11 +963,7 @@ const VIDEO_STORIES = [
   {
     name: "Steve Sullivan",
     company: "Power Communications",
-    quote: "Within just a few months of working with Volare, we already increased our revenue 30% over last year.",
-    // Carrie's figures for this client (2026-10-10). Kept OUT of the quote
-    // because they are not in the recorded testimonial, and anything inside the
-    // quote marks has to be Steve's own words.
-    metrics: "30% revenue · 9x profit · in 4 months",
+    quote: "In just 4 months with Volare, we increased our revenue 30% and our profit 9x.",
     src: "https://player.vimeo.com/video/1218011070?badge=0&autopause=0&player_id=0&app_id=58479",
     title: "Steve Sullivan, Power Communications",
   },
@@ -1658,7 +1647,6 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
                   </div>
                   <div className="v-name">{story.name}</div>
                   <div className="v-company">{story.company}</div>
-                  {"metrics" in story && story.metrics ? <div className="v-metrics">{story.metrics}</div> : null}
                   <p className="v-quote">“{story.quote}”</p>
                 </div>
               ))}
