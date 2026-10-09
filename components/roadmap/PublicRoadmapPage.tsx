@@ -1092,27 +1092,10 @@ function normalizeReportSourceLabel(value: string | null | undefined) {
   return normalized;
 }
 
-function normalizeTeamSizeLabel(value: string | null | undefined) {
-  const normalized = String(value || "").trim();
-  if (!normalized) {
-    return "";
-  }
-  if (/employee/i.test(normalized)) {
-    return normalized;
-  }
-  const numeric = Number(normalized.replace(/,/g, ""));
-  if (Number.isFinite(numeric)) {
-    const rounded = Math.round(numeric);
-    return `${rounded} ${rounded === 1 ? "Employee" : "Employees"}`;
-  }
-  return `${normalized} Employees`;
-}
-
 function buildHeroMetaLine(snapshot: RoadmapDraftJson) {
   return [
     String(snapshot.company.industry || "").trim(),
     String(snapshot.company.owners || "").trim(),
-    normalizeTeamSizeLabel(snapshot.company.teamSizeLabel),
     String(snapshot.company.reportDateLabel || "").trim(),
   ]
     .filter(Boolean)
@@ -1369,9 +1352,9 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
         <section className="hero">
           <span className="eyebrow">{heroSourceLabel}</span>
           <h1>
-            {snapshot.company.companyName}.
+            {snapshot.company.companyName}
             <br />
-            <em>Your 90-Day Roadmap.</em>
+            <em>Your 90-Day Roadmap</em>
           </h1>
           <p className="hero-sub">{heroMetaLine}</p>
           <div className="hero-metrics">
