@@ -923,6 +923,14 @@ const VIDEO_STORIES = [
     src: "https://player.vimeo.com/video/1195763906?badge=0&autopause=0&player_id=0&app_id=58479",
     title: "Co-Founders, Elevated Tahoe Properties",
   },
+  {
+    name: "Steve Sullivan",
+    company: "Power Communications",
+    quote:
+      "Within just a few months of working with Volare, we already increased our revenue 30% over last year. Having Volare as a partner, as another part of your team, gives you real confidence in where the business is headed.",
+    src: "https://player.vimeo.com/video/1218011070?badge=0&autopause=0&player_id=0&app_id=58479",
+    title: "Steve Sullivan, Power Communications",
+  },
 ];
 
 const TEXT_TESTIMONIALS = [
