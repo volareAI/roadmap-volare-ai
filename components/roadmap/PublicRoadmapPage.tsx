@@ -220,6 +220,30 @@ const ROADMAP_PAGE_CSS = `
   .hm-value.green { color: var(--accent); }
   .hm-value.warn { color: #fc8181; }
   .hm-value.amber { color: #fbd38d; }
+  .hero-gap {
+    max-width: 960px;
+    margin: 12px auto 0;
+    padding: 22px 24px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(56,161,105,0.22), rgba(56,161,105,0.08));
+    border: 1px solid var(--accent);
+    text-align: center;
+  }
+  .hero-gap-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--on-dark-secondary);
+    margin-bottom: 6px;
+  }
+  .hero-gap-value {
+    font-size: 44px;
+    line-height: 1.05;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+  }
   .proof-strip {
     background: var(--dark-elevated);
     border-top: 1px solid var(--border);
@@ -865,6 +889,7 @@ const ROADMAP_PAGE_CSS = `
   }
   @media (max-width: 600px) {
     .hero-metrics { grid-template-columns: repeat(2,1fr); }
+    .hero-gap-value { font-size: 34px; }
     .val-inner { grid-template-columns: 1fr; }
     .video-grid { grid-template-columns: 1fr; }
     /*
@@ -1383,6 +1408,19 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
               <div className="hm-value">{snapshot.heroMetrics.valueTargetDisplay}</div>
             </div>
           </div>
+          {/*
+            The gap is what closes the deal (Carrie's call, 2026-10-10), so it
+            gets its own band rather than a seventh identical tile in a six-wide
+            grid. It reads the SAME field as the valuation summary further down
+            rather than a hero copy of it: one number, one box to edit, and no
+            way for the two to drift apart.
+          */}
+          {snapshot.valuationSummary.valueGapDisplay.trim() ? (
+            <div className="hero-gap">
+              <div className="hero-gap-label">Your Identified Gap</div>
+              <div className="hero-gap-value">{snapshot.valuationSummary.valueGapDisplay}</div>
+            </div>
+          ) : null}
         </section>
         </RevealBlock>
 
@@ -1486,7 +1524,13 @@ export function PublicRoadmapPage({ meta, snapshot }: PublicRoadmapPageProps) {
             <div>
               <div className="val-label">Your Identified Gap</div>
               <div className="val-value">{snapshot.valuationSummary.valueGapDisplay}</div>
-              <div className="val-note">{snapshot.valuationSummary.valueGapNote}</div>
+              {/*
+                No note under the gap. It used to read "Estimated value increase
+                at 100% health", which described a different number entirely and
+                was wrong the moment the gap became the owner's own figure.
+                Carrie asked for it gone rather than reworded (2026-10-10); the
+                other three notes still describe their numbers correctly and stay.
+              */}
             </div>
           </div>
         </div>
